@@ -11,10 +11,13 @@
         background-color: #f0f0f0;
         color: #101010;
       }
+
       div#main {
         background-color: #ffffff;
       }
-      input, textarea {
+
+      input,
+      textarea {
         border-color: rgb(170, 170, 170);
       }
     }
@@ -25,10 +28,13 @@
         background-color: #000000;
         color: #e0e0e0;
       }
+
       div#main {
         background-color: #101010;
       }
-      input, textarea {
+
+      input,
+      textarea {
         background-color: rgb(44, 48, 51);
         border-color: rgba(255, 255, 255, 0.2);
       }
@@ -48,7 +54,8 @@
       padding: 3em;
     }
 
-    input, textarea {
+    input,
+    textarea {
       border-radius: 3px;
       border-style: solid;
       border-width: 1px;
@@ -69,7 +76,9 @@
       padding: 0.5em 0.8em;
     }
 
-    h1, h2, label {
+    h1,
+    h2,
+    label {
       white-space: nowrap;
     }
 
@@ -87,13 +96,14 @@
       padding: 1em 0em 2em 0em;
     }
 
-    table#table_secrets thead th, table#table_secrets tbody td {
+    table#table_secrets thead th,
+    table#table_secrets tbody td {
       font-size: 1.1em;
       white-space: nowrap;
     }
   </style>
-  <link href="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.css" rel="stylesheet"/>
-  <script src="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.js" ></script>
+  <link href="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.css" rel="stylesheet" />
+  <script src="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
 </head>
 
@@ -136,7 +146,7 @@
         data: null,
         columnDef: {
           orderable: false,
-          render: function ( data, type, row ) {
+          render: function (data, type, row) {
             return '<button>Update</button>';
           },
           width: '1em'
@@ -193,7 +203,7 @@
       let span_last_updated = document.getElementById('span_last_updated');
       let now = new Date();
       let ISOdate = now.toISOString();
-      span_last_updated.innerHTML = 'Last updated: ' + ISOdate.replace('T',' ').replace(/\.[\d][\d][\d]/,'');
+      span_last_updated.innerHTML = 'Last updated: ' + ISOdate.replace('T', ' ').replace(/\.[\d][\d][\d]/, '');
     };
 
     const table = new DataTable('#table_secrets', {
@@ -209,7 +219,7 @@
       paging: false
     });
 
-    table.on('xhr', () => {renderLastUpdated()});
+    table.on('xhr', () => { renderLastUpdated() });
   </script>
 </body>
 
