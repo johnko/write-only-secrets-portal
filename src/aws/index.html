@@ -86,7 +86,7 @@
       white-space: nowrap;
     }
 
-    span#span_last_updated {
+    span#span_last_refreshed {
       padding: 0.5em 0em 2em 0em;
       white-space: nowrap;
     }
@@ -138,7 +138,7 @@
       </label>
       <input id="input_filter_secrets" />
       <button id="button_refresh">Refresh</button>
-      <span id="span_last_updated"></span>
+      <span id="span_last_refreshed"></span>
     </div>
     <div id="div_secrets">
       <table id="table_secrets" class="cell-border hover order-column stripe">
@@ -216,11 +216,11 @@
     // const ONE_SECOND = 1000;
     // const ONE_MINUTE = 60 * ONE_SECOND;
     // const ONE_HOUR = 60 * ONE_MINUTE;
-    const renderLastUpdated = () => {
-      let span_last_updated = document.getElementById('span_last_updated');
+    const renderLastRefreshed = () => {
+      let span_last_refreshed = document.getElementById('span_last_refreshed');
       let now = new Date();
       let ISOdate = now.toISOString();
-      span_last_updated.innerHTML = 'Last updated: ' + ISOdate.replace('T', ' ').replace(/\.[\d][\d][\d]/, '');
+      span_last_refreshed.innerHTML = 'List refreshed: ' + ISOdate.replace('T', ' ').replace(/\.[\d][\d][\d]/, '');
     };
 
     const table = new DataTable('#table_secrets', {
@@ -238,7 +238,7 @@
       responsive: true
     });
 
-    table.on('xhr', () => { renderLastUpdated() });
+    table.on('xhr', () => { renderLastRefreshed() });
 
     let button_refresh = document.getElementById('button_refresh');
     button_refresh.onclick = () => {
