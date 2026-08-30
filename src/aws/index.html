@@ -247,6 +247,7 @@
 
     let input_filter_secrets = document.getElementById('input_filter_secrets');
     input_filter_secrets.onkeyup = () => {
+      input_filter_secrets.value = input_filter_secrets.value.trim();
       table.ajax.url('/api/aws/secretsmanager/listsecrets?contains=' + input_filter_secrets.value.trim());
     }
   </script>
