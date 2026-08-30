@@ -1,0 +1,18 @@
+[project]
+name = "test-aws"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "johnko",email = "279736+johnko@users.noreply.github.com"}
+]
+license = "MIT"
+requires-python = ">=3.14"
+dependencies = [
+    "moto[secretsmanager]",
+    "moto[server] (==4.2.6)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

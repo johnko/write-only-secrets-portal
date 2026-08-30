@@ -76,6 +76,10 @@
       padding: 0.5em 0.8em;
     }
 
+    .green {
+      background-image: linear-gradient(to left, rgb(44, 135, 70), rgb(31, 136, 61));
+    }
+
     h1,
     h2,
     label {
@@ -87,7 +91,7 @@
       white-space: nowrap;
     }
 
-    input#filter_secrets {
+    input#input_filter_secrets {
       height: 2em;
       width: 30em;
     }
@@ -99,12 +103,19 @@
     table#table_secrets thead th,
     table#table_secrets tbody td {
       font-size: 1.1em;
+    }
+
+    .nowrap {
       white-space: nowrap;
     }
   </style>
   <link href="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.css" rel="stylesheet" />
+  <link href="https://cdn.datatables.net/responsive/4.0.2/css/responsive.dataTables.min.css" />
   <script src="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/4.0.2/js/dataTables.responsive.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/4.0.2/js/responsive.dataTables.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@hiseb/confetti@2.2.0/dist/confetti.min.js"></script>
 </head>
 
 <body>
@@ -119,11 +130,14 @@
           AWS Secrets Manager
         </em>
       </h2>
-      <label for="filter_secrets">
+      <div>
+        <button id="button_test_create" class="green">TEST: Create test secret</button>
+      </div>
+      <label for="input_filter_secrets">
         Search pattern (server-side):
       </label>
-      <input id="filter_secrets" />
-      <button id="refresh">Refresh</button>
+      <input id="input_filter_secrets" />
+      <button id="button_refresh">Refresh</button>
       <span id="span_last_updated"></span>
     </div>
     <div id="div_secrets">
@@ -141,7 +155,12 @@
   </script>
   <script>
     const columnsSource = [
-      { data: 'Name' },
+      {
+        data: 'Name',
+        columnDef: {
+          className: 'nowrap'
+        }
+      },
       {
         data: null,
         columnDef: {
@@ -155,12 +174,18 @@
       {
         data: 'LastChangedDate',
         columnDef: {
-          className: 'dt-head-left dt-body-left',
-          render: DataTable.render.datetime('X', 'YYYY-MM-DD HH:mm:ssZ', 'en'),
+          className: 'dt-head-left dt-body-left nowrap',
+          render: DataTable.render.datetime('YYYY-MM-DDTHH:mm:ssZ', 'YYYY-MM-DD HH:mm:ssZ', 'en'), // DataTable.render.datetime('X', 'YYYY-MM-DD HH:mm:ssZ', 'en'),
           width: '22em'
         }
       },
-      { data: 'ARN' }
+      { data: 'Description' },
+      {
+        data: 'ARN',
+        columnDef: {
+          className: 'nowrap'
+        }
+      }
     ];
     // console.log(columnsSource);
 
@@ -188,14 +213,6 @@
     let table_secrets_head = document.getElementById('table_secrets_head');
     table_secrets_head.innerHTML = columnHeadHtml;
 
-    const setupEventActions = () => {
-      // let refresh = document.getElementById('refresh');
-      // refresh.onclick = () => {
-      //   makeDataTableRefresh();
-      // };
-    };
-    setupEventActions();
-
     // const ONE_SECOND = 1000;
     // const ONE_MINUTE = 60 * ONE_SECOND;
     // const ONE_HOUR = 60 * ONE_MINUTE;
@@ -209,17 +226,52 @@
     const table = new DataTable('#table_secrets', {
       ajax: {
         dataSrc: 'SecretList',
-        url: '/aws/example_aws_secretsmanager_list.json'
+        // url: '/aws/example_aws_secretsmanager_list.json'
+        url: '/api/aws/secretsmanager/listsecrets'
       },
       columnDefs,
       columns,
       language: {
         search: 'Filter records:'
       },
-      paging: false
+      paging: false,
+      responsive: true
     });
 
     table.on('xhr', () => { renderLastUpdated() });
+
+    let button_refresh = document.getElementById('button_refresh');
+    button_refresh.onclick = () => {
+      table.ajax.reload();
+    };
+
+    let input_filter_secrets = document.getElementById('input_filter_secrets');
+    input_filter_secrets.onkeyup = () => {
+      table.ajax.url('/api/aws/secretsmanager/listsecrets?contains=' + input_filter_secrets.value.trim());
+    }
+  </script>
+  <script>
+    const apiTestAws = () => {
+      const xhr = new XMLHttpRequest();
+
+      // Configure the request (Method, URL, Async)
+      xhr.open('POST', '/test/aws', true);
+
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          confetti();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+        }
+      };
+
+      xhr.send();
+    }
+
+    let button_test_create = document.getElementById('button_test_create');
+    button_test_create.onclick = () => {
+      apiTestAws();
+    };
   </script>
 </body>
 
