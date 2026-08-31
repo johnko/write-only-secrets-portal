@@ -181,7 +181,7 @@
           orderable: false,
           render: function (data, type, row) {
             const safename = data.Name.replace(/[^0-9a-zA-Z]/g, '_');
-            return '<button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="'+data.Name+'" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
+            return '<button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="' + data.Name + '" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
           },
           width: '40em'
         }
@@ -296,7 +296,6 @@
       var valueFrom = event.srcElement.getAttribute('valueFrom');
       var textarea = document.getElementById(valueFrom);
       // console.log(textarea.value);
-
 
       const xhr = new XMLHttpRequest();
       // Configure the request (Method, URL, Async)
