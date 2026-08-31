@@ -109,6 +109,10 @@
       font-size: 1.1em;
     }
 
+    table#table_secrets tbody td {
+      vertical-align: top;
+    }
+
     .nowrap {
       white-space: nowrap;
     }
@@ -177,7 +181,7 @@
           orderable: false,
           render: function (data, type, row) {
             editCancelScript = "var element = document.getElementById('form-"+data.Name+"'); console.log(element.style.display); if (element.style.display.includes('grid')){ element.style='display:none;'; element.previousElementSibling.innerText='Edit'; } else { element.style='display:grid;'; element.previousElementSibling.innerText='Cancel'; }";
-            return '<button onclick="'+editCancelScript+'">Edit</button><span id="form-'+data.Name+'" style="display:none;"><textarea></textarea><button class="orange">Write secret value</button></span>';
+            return '<button onclick="'+editCancelScript+'">Edit</button><span id="form-'+data.Name+'" style="display:none;"><textarea rows=4></textarea><button class="orange">Write secret value</button></span>';
           },
           width: '40em'
         }
