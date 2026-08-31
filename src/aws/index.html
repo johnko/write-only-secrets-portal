@@ -80,6 +80,10 @@
       background-image: linear-gradient(to left, rgb(44, 135, 70), rgb(31, 136, 61));
     }
 
+    .orange {
+      background-image: linear-gradient(to left, rgb(253, 115, 61), rgb(255, 95, 31));
+    }
+
     h1,
     h2,
     label {
@@ -172,9 +176,10 @@
         columnDef: {
           orderable: false,
           render: function (data, type, row) {
-            return '<button>Edit secret value</button>';
+            editCancelScript = "var element = document.getElementById('form-"+data.Name+"'); console.log(element.style.display); if (element.style.display.includes('grid')){ element.style='display:none;'; element.previousElementSibling.innerText='Edit'; } else { element.style='display:grid;'; element.previousElementSibling.innerText='Cancel'; }";
+            return '<button onclick="'+editCancelScript+'">Edit</button><span id="form-'+data.Name+'" style="display:none;"><textarea></textarea><button class="orange">Write secret value</button></span>';
           },
-          width: '1em'
+          width: '40em'
         }
       },
       {
@@ -184,15 +189,20 @@
           render: function (data, type, row) {
             return '<relative-time datetime="'+data+'"></relative-time>';
           },
-          width: '22em'
+          width: '5em'
         }
       },
-      { data: 'Description' },
       {
-        data: 'ARN',
+        data: 'Description',
         columnDef: {
-          className: 'nowrap'
+          width: '40em'
         }
+      // },
+      // {
+      //   data: 'ARN',
+      //   columnDef: {
+      //     className: 'nowrap'
+      //   }
       }
     ];
     // console.log(columnsSource);
