@@ -20,6 +20,7 @@ else
 fi
 mise exec go@$GOLANG_VERSION -- go fmt ./main.go
 mise exec go@$GOLANG_VERSION -- go mod tidy
+# Point to our simulaated AWS secretsmanager service for testing
 export AWS_ENDPOINT_URL="http://127.0.0.1:3000/"
 export AWS_ACCESS_KEY_ID="test"
 export AWS_SECRET_ACCESS_KEY="test"
