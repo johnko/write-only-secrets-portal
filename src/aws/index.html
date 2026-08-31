@@ -109,12 +109,14 @@
       white-space: nowrap;
     }
   </style>
+  <!-- datatables -->
   <link href="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.css" rel="stylesheet" />
-  <link href="https://cdn.datatables.net/responsive/4.0.2/css/responsive.dataTables.min.css" />
   <script src="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.js"></script>
+  <!-- responseive datatables -->
+  <link href="https://cdn.datatables.net/responsive/4.0.2/css/responsive.dataTables.min.css" />
   <script src="https://cdn.datatables.net/responsive/4.0.2/js/dataTables.responsive.min.js"></script>
   <script src="https://cdn.datatables.net/responsive/4.0.2/js/responsive.dataTables.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+  <!-- confetti -->
   <script src="https://cdn.jsdelivr.net/npm/@hiseb/confetti@2.2.0/dist/confetti.min.js"></script>
 </head>
 
@@ -138,7 +140,7 @@
       </label>
       <input id="input_filter_secrets" />
       <button id="button_refresh">Refresh</button>
-      <span id="span_last_refreshed"></span>
+      <span id="span_last_refreshed">List refreshed: <relative-time id="reltime_last_refreshed" datetime=""></relative-time></span>
     </div>
     <div id="div_secrets">
       <table id="table_secrets" class="cell-border hover order-column stripe">
@@ -175,7 +177,9 @@
         data: 'LastChangedDate',
         columnDef: {
           className: 'dt-head-left dt-body-left nowrap',
-          render: DataTable.render.datetime('YYYY-MM-DDTHH:mm:ssZ', 'YYYY-MM-DD HH:mm:ssZ', 'en'), // DataTable.render.datetime('X', 'YYYY-MM-DD HH:mm:ssZ', 'en'),
+          render: function (data, type, row) {
+            return '<relative-time datetime="'+data+'"></relative-time>';
+          },
           width: '22em'
         }
       },
@@ -217,10 +221,10 @@
     // const ONE_MINUTE = 60 * ONE_SECOND;
     // const ONE_HOUR = 60 * ONE_MINUTE;
     const renderLastRefreshed = () => {
-      let span_last_refreshed = document.getElementById('span_last_refreshed');
+      let reltime_last_refreshed = document.getElementById('reltime_last_refreshed');
       let now = new Date();
       let ISOdate = now.toISOString();
-      span_last_refreshed.innerHTML = 'List refreshed: ' + ISOdate.replace('T', ' ').replace(/\.[\d][\d][\d]/, '');
+      reltime_last_refreshed.datetime = ISOdate;
     };
 
     const table = new DataTable('#table_secrets', {
@@ -273,6 +277,9 @@
     button_test_create.onclick = () => {
       apiTestAws();
     };
+  </script>
+  <script type="module">
+    import githubrelativeTimeElement from 'https://cdn.jsdelivr.net/npm/@github/relative-time-element@5.3.1/+esm';
   </script>
 </body>
 
