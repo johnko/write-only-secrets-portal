@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"io"
 	"log"
 	"net/http"
 )
@@ -16,6 +17,11 @@ import (
 type ResponseData struct {
 	Message string `json:"message"`
 	Status  string `json:"status"`
+}
+
+type UpdateData struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 func recursiveCreateTestSecret(count int) string {
@@ -99,13 +105,75 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 
 	response, err := client.ListSecrets(ctx, listSecretsInput)
 	if err != nil {
-		log.Fatalf("failed to list secrets, %v", err)
+		log.Println("failed to list secrets, %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(
+			ResponseData{
+				Message: fmt.Sprintf("failed to list secrets, %v", err),
+				Status:  "error",
+			},
+		)
+	} else {
+		// Set headers and encode response to JSON
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
+func handlePutSecretValueRequest(w http.ResponseWriter, r *http.Request) {
+	ctx := context.TODO()
+
+	// Strictly enforce the PUT method
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
 
-	// Set headers and encode response to JSON
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	// Read put parameters (e.g., name, value)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	var data UpdateData
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	putSecretValueInput := &secretsmanager.PutSecretValueInput{
+		SecretId:     aws.String(data.Name),
+		SecretString: aws.String(data.Value),
+	}
+
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	client := secretsmanager.NewFromConfig(cfg)
+
+	response, err := client.PutSecretValue(ctx, putSecretValueInput)
+	if err != nil {
+		log.Println("failed to put secret value, %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(
+			ResponseData{
+				Message: fmt.Sprintf("failed to put secret value, %v", err),
+				Status:  "error",
+			},
+		)
+	} else {
+		// Set headers and encode response to JSON
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+	}
 }
 
 func main() {
