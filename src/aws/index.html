@@ -140,7 +140,11 @@
       </label>
       <input id="input_filter_secrets" />
       <button id="button_refresh">Refresh</button>
-      <span id="span_last_refreshed">List refreshed: <relative-time id="reltime_last_refreshed" datetime=""></relative-time></span>
+      <span id="span_last_refreshed">
+        List refreshed:
+        <relative-time id="reltime_last_refreshed" datetime="" format="duration"></relative-time>
+        ago
+      </span>
     </div>
     <div id="div_secrets">
       <table id="table_secrets" class="cell-border hover order-column stripe">
