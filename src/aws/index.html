@@ -180,8 +180,8 @@
         columnDef: {
           orderable: false,
           render: function (data, type, row) {
-            editCancelScript = "var element = document.getElementById('form-"+data.Name+"'); console.log(element.style.display); if (element.style.display.includes('grid')){ element.style='display:none;'; element.previousElementSibling.innerText='Edit'; } else { element.style='display:grid;'; element.previousElementSibling.innerText='Cancel'; }";
-            return '<button onclick="'+editCancelScript+'">Edit</button><span id="form-'+data.Name+'" style="display:none;"><textarea rows=4></textarea><button class="orange">Write secret value</button></span>';
+            const safename = data.Name.replace(/[^0-9a-zA-Z]/g, '_');
+            return '<button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="'+data.Name+'" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
           },
           width: '40em'
         }
@@ -191,7 +191,7 @@
         columnDef: {
           className: 'dt-head-left dt-body-left nowrap',
           render: function (data, type, row) {
-            return '<relative-time datetime="'+data+'"></relative-time>';
+            return '<relative-time datetime="' + data + '"></relative-time>';
           },
           width: '5em'
         }
@@ -201,12 +201,12 @@
         columnDef: {
           width: '40em'
         }
-      // },
-      // {
-      //   data: 'ARN',
-      //   columnDef: {
-      //     className: 'nowrap'
-      //   }
+        // },
+        // {
+        //   data: 'ARN',
+        //   columnDef: {
+        //     className: 'nowrap'
+        //   }
       }
     ];
     // console.log(columnsSource);
@@ -274,6 +274,50 @@
     input_filter_secrets.onkeyup = () => {
       input_filter_secrets.value = input_filter_secrets.value.trim();
       table.ajax.url('/api/aws/secretsmanager/listsecrets?contains=' + input_filter_secrets.value.trim());
+    }
+
+    const editOrCancelButton = (event) => {
+      // console.log(event.srcElement.getAttribute('form'));
+      var form = event.srcElement.getAttribute('form');
+      var form = document.getElementById(form);
+      // console.log(form.style.display);
+      if (form.style.display.includes('grid')) {
+        form.style = 'display:none;';
+        form.previousElementSibling.innerText = 'Edit';
+      } else {
+        form.style = 'display:grid;';
+        form.previousElementSibling.innerText = 'Cancel';
+      }
+    }
+
+    const putSecretValueButton = (event) => {
+      // console.log(event.srcElement.getAttribute('valueFrom'));
+      // console.log(event.srcElement.getAttribute('form'));
+      var valueFrom = event.srcElement.getAttribute('valueFrom');
+      var textarea = document.getElementById(valueFrom);
+      // console.log(textarea.value);
+
+
+      const xhr = new XMLHttpRequest();
+      // Configure the request (Method, URL, Async)
+      xhr.open('POST', '/test/aws', true); // TODO putsecret value api instead of this test
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          confetti();
+          table.ajax.reload();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+        }
+      };
+      xhr.send();
+
+      var form = event.srcElement.getAttribute('form');
+      var form = document.getElementById(form);
+      // console.log(form.style.display);
+      if (form.style.display.includes('grid')) {
+        form.style = 'display:none;';
+        form.previousElementSibling.innerText = 'Edit';
+      }
     }
   </script>
   <script>
