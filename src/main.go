@@ -13,6 +13,8 @@ import (
 	"net/http"
 )
 
+var MODE = "production" // production or test
+
 // ResponseData defines the structure of our JSON response
 type ResponseData struct {
 	Message string `json:"message"`
@@ -28,105 +30,132 @@ type UpdateData struct {
 	Value string `json:"value"`
 }
 
-func recursiveCreateTestSecret(count int) string {
-	ctx := context.TODO()
+func notAcceptable(w http.ResponseWriter) {
+	// common response to not allow testing in production
 
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	client := secretsmanager.NewFromConfig(cfg)
-
-	secretName := fmt.Sprintf("my-app-test-creds-%d", count)
-	secretString := `{"username":"test","password":"test"}`
-	input := &secretsmanager.CreateSecretInput{
-		Name:         aws.String(secretName),
-		SecretString: aws.String(secretString),
-		Description:  aws.String("Database credentials created via Go SDK"),
-	}
-	_, err = client.CreateSecret(ctx, input)
-	if err != nil {
-		count = count + 1
-		// log.Println("failed to create secret, %v", err)
-		return recursiveCreateTestSecret(count)
-	} else {
-		// log.Println(result)
-		return secretName
-	}
-}
-
-func handleTestCreateSecret(w http.ResponseWriter, r *http.Request) {
-	// Strictly enforce the POST method
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	secretName := recursiveCreateTestSecret(0)
-
-	// Prepare data structure
 	response := ResponseData{
-		Message: fmt.Sprintf("Created test secret %s", secretName),
-		Status:  "success",
+		Message: "MODE==production, no testing allowed",
+		Status:  "error",
 	}
 
 	// Set headers and encode response to JSON
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusNotAcceptable)
 	json.NewEncoder(w).Encode(response)
 }
 
-func handleTestGetSecretValue(w http.ResponseWriter, r *http.Request) {
-	ctx := context.TODO()
+func recursiveCreateTestSecret(count int) string {
+	if MODE != "production" {
+		ctx := context.TODO()
 
-	// Strictly enforce the POST method
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+		cfg, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			panic(err)
+		}
 
-	// Read put parameters (e.g., name, value)
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
+		client := secretsmanager.NewFromConfig(cfg)
 
-	var data GetData
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	getSecretValueInput := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(data.Name),
-	}
-
-	cfg, err := config.LoadDefaultConfig(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	client := secretsmanager.NewFromConfig(cfg)
-
-	response, err := client.GetSecretValue(ctx, getSecretValueInput)
-	if err != nil {
-		log.Println("failed to get secret value, %v", err)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(
-			ResponseData{
-				Message: fmt.Sprintf("failed to get secret value, %v", err),
-				Status:  "error",
-			},
-		)
+		secretName := fmt.Sprintf("my-app-test-creds-%d", count)
+		secretString := `{"username":"test","password":"test"}`
+		input := &secretsmanager.CreateSecretInput{
+			Name:         aws.String(secretName),
+			SecretString: aws.String(secretString),
+			Description:  aws.String("Database credentials created via Go SDK"),
+		}
+		_, err = client.CreateSecret(ctx, input)
+		if err != nil {
+			count = count + 1
+			// log.Println("failed to create secret, %v", err)
+			return recursiveCreateTestSecret(count)
+		} else {
+			// log.Println(result)
+			return secretName
+		}
 	} else {
+		// dont allow test in production
+		return string('0')
+	}
+}
+
+func handleTestCreateSecret(w http.ResponseWriter, r *http.Request) {
+	if MODE != "production" {
+		// Strictly enforce the POST method
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		secretName := recursiveCreateTestSecret(0)
+
+		// Prepare data structure
+		response := ResponseData{
+			Message: fmt.Sprintf("Created test secret %s", secretName),
+			Status:  "success",
+		}
+
 		// Set headers and encode response to JSON
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
+	} else {
+		notAcceptable(w)
+	}
+}
+
+func handleTestGetSecretValue(w http.ResponseWriter, r *http.Request) {
+	if MODE != "production" {
+		ctx := context.TODO()
+
+		// Strictly enforce the POST method
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Read put parameters (e.g., name, value)
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		var data GetData
+		err = json.Unmarshal(body, &data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		getSecretValueInput := &secretsmanager.GetSecretValueInput{
+			SecretId: aws.String(data.Name),
+		}
+
+		cfg, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		client := secretsmanager.NewFromConfig(cfg)
+
+		response, err := client.GetSecretValue(ctx, getSecretValueInput)
+		if err != nil {
+			log.Println("failed to get secret value, %v", err)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(
+				ResponseData{
+					Message: fmt.Sprintf("failed to get secret value, %v", err),
+					Status:  "error",
+				},
+			)
+		} else {
+			// Set headers and encode response to JSON
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(response)
+		}
+	} else {
+		notAcceptable(w)
 	}
 }
 
@@ -237,6 +266,7 @@ func main() {
 	// Register the route and handler function
 	http.HandleFunc("/api/aws/secretsmanager/listsecrets", handleListSecrets)
 	http.HandleFunc("/api/aws/secretsmanager/putsecretvalue", handlePutSecretValue)
+
 	http.HandleFunc("/test/aws/create", handleTestCreateSecret)
 	http.HandleFunc("/test/aws/get", handleTestGetSecretValue)
 
