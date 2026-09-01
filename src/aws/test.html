@@ -1,0 +1,378 @@
+<html lang="en">
+
+<head>
+  <title>
+    WOSP: Write-Only Secrets Portal
+  </title>
+  <style>
+    /* Styles for light mode */
+    @media (prefers-color-scheme: light) {
+      body {
+        background-color: #f0f0f0;
+        color: #101010;
+      }
+
+      div#main {
+        background-color: #ffffff;
+      }
+
+      input,
+      textarea {
+        border-color: rgb(170, 170, 170);
+      }
+    }
+
+    /* Styles for dark mode */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #000000;
+        color: #e0e0e0;
+      }
+
+      div#main {
+        background-color: #101010;
+      }
+
+      input,
+      textarea {
+        background-color: rgb(44, 48, 51);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    body {
+      font-family: monospace;
+      font-size: 1.2em;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    div#main {
+      margin: 3em;
+      padding: 3em;
+    }
+
+    input,
+    textarea {
+      border-radius: 3px;
+      border-style: solid;
+      border-width: 1px;
+      font-family: monospace;
+      font-size: 1em;
+      margin: 0.2em 1em 0.4em 0em;
+    }
+
+    button {
+      background-image: linear-gradient(to left, rgb(72, 138, 218), rgb(58, 127, 213));
+      border-radius: 5px;
+      border-width: 1px;
+      color: #fff;
+      cursor: hand;
+      font-family: monospace;
+      font-size: 1em;
+      margin: 0em 1em 1em 0em;
+      padding: 0.5em 0.8em;
+    }
+
+    .green {
+      background-image: linear-gradient(to left, rgb(44, 135, 70), rgb(31, 136, 61));
+    }
+
+    .orange {
+      background-image: linear-gradient(to left, rgb(253, 115, 61), rgb(255, 95, 31));
+    }
+
+    h1,
+    h2,
+    label {
+      white-space: nowrap;
+    }
+
+    span#span_last_refreshed {
+      padding: 0.5em 0em 2em 0em;
+      white-space: nowrap;
+    }
+
+    input#input_filter_secrets {
+      height: 2em;
+      width: 30em;
+    }
+
+    div#div_secrets {
+      padding: 1em 0em 2em 0em;
+    }
+
+    table#table_secrets thead th,
+    table#table_secrets tbody td {
+      font-size: 1.1em;
+    }
+
+    table#table_secrets tbody td {
+      vertical-align: top;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+  </style>
+  <!-- datatables -->
+  <link href="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.css" rel="stylesheet" />
+  <script src="https://cdn.datatables.net/v/dt/dt-3.0.2/datatables.min.js"></script>
+  <!-- responseive datatables -->
+  <link href="https://cdn.datatables.net/responsive/4.0.2/css/responsive.dataTables.min.css" />
+  <script src="https://cdn.datatables.net/responsive/4.0.2/js/dataTables.responsive.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/4.0.2/js/responsive.dataTables.min.js"></script>
+  <!-- confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/@hiseb/confetti@2.2.0/dist/confetti.min.js"></script>
+</head>
+
+<body>
+  <div id="main">
+    <h1>
+      WOSP: Write-Only Secrets Portal
+    </h1>
+    <div>
+      <h2>
+        Secret Source:
+        <em>
+          AWS Secrets Manager
+        </em>
+      </h2>
+      <div>
+        <button id="button_test_create" class="green">TEST: Create test secret</button>
+      </div>
+      <label for="input_filter_secrets">
+        Search pattern (server-side):
+      </label>
+      <input id="input_filter_secrets" />
+      <button id="button_refresh">Refresh</button>
+      <span id="span_last_refreshed">
+        List refreshed:
+        <relative-time id="reltime_last_refreshed" datetime="" format="duration"></relative-time>
+        ago
+      </span>
+    </div>
+    <div id="div_secrets">
+      <table id="table_secrets" class="cell-border hover order-column stripe">
+        <thead id="table_secrets_head"></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    // Auto-detect system light or dark mode
+    let prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    let html = document.querySelector('html');
+    html.classList.add(prefers); // DataTables
+  </script>
+  <script>
+    const columnsSource = [
+      {
+        data: 'Name',
+        columnDef: {
+          className: 'nowrap'
+        }
+      },
+      {
+        data: null,
+        columnDef: {
+          orderable: false,
+          render: function (data, type, row) {
+            const safename = data.Name.replace(/[^0-9a-zA-Z]/g, '_');
+            return '<button secretName="' + data.Name + '"  onclick="testGetSecretValueButton(event)" class="green">TEST: get secret</button><button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="' + data.Name + '" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
+          },
+          width: '40em'
+        }
+      },
+      {
+        data: 'LastChangedDate',
+        columnDef: {
+          className: 'dt-head-left dt-body-left nowrap',
+          render: function (data, type, row) {
+            return '<relative-time datetime="' + data + '"></relative-time>';
+          },
+          width: '5em'
+        }
+      },
+      {
+        data: 'Description',
+        columnDef: {
+          width: '40em'
+        }
+        // },
+        // {
+        //   data: 'ARN',
+        //   columnDef: {
+        //     className: 'nowrap'
+        //   }
+      }
+    ];
+    // console.log(columnsSource);
+
+    const columns = columnsSource.map((element) => {
+      return { data: element.data };
+    });
+    // console.log(columns);
+
+    const columnDefs = columnsSource.map((element, index) => {
+      if (element.hasOwnProperty('columnDef')) {
+        return {
+          ...element.columnDef,
+          targets: index
+        };
+      }
+    }).filter(element => element != undefined);
+    // console.log(columnDefs);
+
+    const columnHeadHtml = columnsSource.map((element) => {
+      const th = document.createElement('th');
+      th.innerText = element.data;
+      return th.outerHTML;
+    }).join('');
+    // console.log(columnHeadHtml);
+    let table_secrets_head = document.getElementById('table_secrets_head');
+    table_secrets_head.innerHTML = columnHeadHtml;
+
+    // const ONE_SECOND = 1000;
+    // const ONE_MINUTE = 60 * ONE_SECOND;
+    // const ONE_HOUR = 60 * ONE_MINUTE;
+    const renderLastRefreshed = () => {
+      let reltime_last_refreshed = document.getElementById('reltime_last_refreshed');
+      let now = new Date();
+      let ISOdate = now.toISOString();
+      reltime_last_refreshed.datetime = ISOdate;
+    };
+
+    const table = new DataTable('#table_secrets', {
+      ajax: {
+        dataSrc: 'SecretList',
+        // url: '/aws/example_aws_secretsmanager_list.json'
+        url: '/api/aws/secretsmanager/listsecrets'
+      },
+      columnDefs,
+      columns,
+      language: {
+        search: 'Filter records:'
+      },
+      order: [
+        [2, 'desc'] // default order by LastChangedDate most recent first
+      ],
+      paging: false,
+      responsive: true
+    });
+
+    table.on('xhr', () => { renderLastRefreshed() });
+
+    let button_refresh = document.getElementById('button_refresh');
+    button_refresh.onclick = () => {
+      table.ajax.reload();
+    };
+
+    let input_filter_secrets = document.getElementById('input_filter_secrets');
+    input_filter_secrets.onkeyup = () => {
+      input_filter_secrets.value = input_filter_secrets.value.trim();
+      table.ajax.url('/api/aws/secretsmanager/listsecrets?contains=' + input_filter_secrets.value.trim());
+    }
+
+    const editOrCancelButton = (event) => {
+      // console.log(event.srcElement.getAttribute('form'));
+      var form = event.srcElement.getAttribute('form');
+      var form = document.getElementById(form);
+      // console.log(form.style.display);
+      if (form.style.display.includes('grid')) {
+        form.style = 'display:none;';
+        form.previousElementSibling.innerText = 'Edit';
+      } else {
+        form.style = 'display:grid;';
+        form.previousElementSibling.innerText = 'Cancel';
+      }
+    }
+
+    const putSecretValueButton = (event) => {
+      var secretName = event.srcElement.getAttribute('secretName');
+      var valueFrom = event.srcElement.getAttribute('valueFrom');
+      var textarea = document.getElementById(valueFrom);
+      // console.log(secretName);
+      // console.log(valueFrom);
+      // console.log(textarea.value);
+
+      const xhr = new XMLHttpRequest();
+      // Configure the request (Method, URL, Async)
+      xhr.open('PUT', '/api/aws/secretsmanager/putsecretvalue', true); // TODO putsecret value api instead of this test
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          confetti();
+          table.ajax.reload();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+        }
+      };
+      const payload = {
+        name: secretName,
+        value: textarea.value
+      };
+      xhr.send(JSON.stringify(payload));
+
+      var form = event.srcElement.getAttribute('form');
+      var form = document.getElementById(form);
+      // console.log(form.style.display);
+      if (form.style.display.includes('grid')) {
+        form.style = 'display:none;';
+        form.previousElementSibling.innerText = 'Edit';
+      }
+    }
+  </script>
+  <script>
+    const apiTestAws = () => {
+      const xhr = new XMLHttpRequest();
+
+      // Configure the request (Method, URL, Async)
+      xhr.open('POST', '/test/aws/create', true);
+
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          confetti();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+        }
+      };
+
+      xhr.send();
+    }
+
+    let button_test_create = document.getElementById('button_test_create');
+    button_test_create.onclick = () => {
+      apiTestAws();
+    };
+
+    const testGetSecretValueButton = (event) => {
+      var secretName = event.srcElement.getAttribute('secretName');
+      // console.log(secretName);
+
+      const xhr = new XMLHttpRequest();
+      // Configure the request (Method, URL, Async)
+      xhr.open('POST', '/test/aws/get', true);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log(JSON.parse(xhr.responseText).SecretString);
+          confetti();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+        }
+      };
+      const payload = {
+        name: secretName
+      };
+      xhr.send(JSON.stringify(payload));
+    }
+  </script>
+  <script type="module">
+    import githubrelativeTimeElement from 'https://cdn.jsdelivr.net/npm/@github/relative-time-element@5.3.1/+esm';
+  </script>
+</body>
+
+</html>
