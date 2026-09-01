@@ -7,7 +7,7 @@ set -exuo pipefail
 PYTHON_VERSION=3.14.7
 
 # renovate: datasource=pypi depName=pipx packageName=pipx
-PIPX_VERSION=1.16.6
+PIPX_VERSION=1.16.7
 
 # renovate: datasource=pypi depName=poetry packageName=poetry
 POETRY_VERSION=2.4.1
