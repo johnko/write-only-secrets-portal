@@ -181,7 +181,7 @@
           orderable: false,
           render: function (data, type, row) {
             const safename = data.Name.replace(/[^0-9a-zA-Z]/g, '_');
-            return '<button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="' + data.Name + '" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
+            return '<button secretName="' + data.Name + '"  onclick="testGetSecretValueButton(event)" class="green">TEST: get secret</button><button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="' + data.Name + '" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
           },
           width: '40em'
         }
@@ -291,15 +291,17 @@
     }
 
     const putSecretValueButton = (event) => {
-      // console.log(event.srcElement.getAttribute('valueFrom'));
-      // console.log(event.srcElement.getAttribute('form'));
+      var secretName = event.srcElement.getAttribute('secretName');
       var valueFrom = event.srcElement.getAttribute('valueFrom');
       var textarea = document.getElementById(valueFrom);
+      // console.log(secretName);
+      // console.log(valueFrom);
       // console.log(textarea.value);
 
       const xhr = new XMLHttpRequest();
       // Configure the request (Method, URL, Async)
-      xhr.open('POST', '/test/aws', true); // TODO putsecret value api instead of this test
+      xhr.open('PUT', '/api/aws/secretsmanager/putsecretvalue', true); // TODO putsecret value api instead of this test
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
           confetti();
@@ -308,7 +310,11 @@
           console.error('Request failed with status:', xhr.status);
         }
       };
-      xhr.send();
+      const payload = {
+        name: secretName,
+        value: textarea.value
+      };
+      xhr.send(JSON.stringify(payload));
 
       var form = event.srcElement.getAttribute('form');
       var form = document.getElementById(form);
@@ -324,7 +330,7 @@
       const xhr = new XMLHttpRequest();
 
       // Configure the request (Method, URL, Async)
-      xhr.open('POST', '/test/aws', true);
+      xhr.open('POST', '/test/aws/create', true);
 
       xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
@@ -341,6 +347,28 @@
     button_test_create.onclick = () => {
       apiTestAws();
     };
+
+    const testGetSecretValueButton = (event) => {
+      var secretName = event.srcElement.getAttribute('secretName');
+      // console.log(secretName);
+
+      const xhr = new XMLHttpRequest();
+      // Configure the request (Method, URL, Async)
+      xhr.open('POST', '/test/aws/get', true);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log(JSON.parse(xhr.responseText).SecretString);
+          confetti();
+        } else {
+          console.error('Request failed with status:', xhr.status);
+        }
+      };
+      const payload = {
+        name: secretName
+      };
+      xhr.send(JSON.stringify(payload));
+    }
   </script>
   <script type="module">
     import githubrelativeTimeElement from 'https://cdn.jsdelivr.net/npm/@github/relative-time-element@5.3.1/+esm';
