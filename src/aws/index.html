@@ -181,7 +181,9 @@
           orderable: false,
           render: function (data, type, row) {
             const safename = data.Name.replace(/[^0-9a-zA-Z]/g, '_');
-            return '<button secretName="' + data.Name + '"  onclick="testGetSecretValueButton(event)" class="green">TEST: get secret</button><button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="' + data.Name + '" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
+            const test_button = '<button secretName="' + data.Name + '"  onclick="testGetSecretValueButton(event)" class="green">TEST: get secret</button>';
+            const result = '<button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="' + data.Name + '" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
+            return test_button + result;
           },
           width: '40em'
         }
