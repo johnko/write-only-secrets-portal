@@ -25,5 +25,6 @@ export AWS_ENDPOINT_URL="http://127.0.0.1:3000/"
 export AWS_ACCESS_KEY_ID="test"
 export AWS_SECRET_ACCESS_KEY="test"
 export AWS_REGION="ca-central-1"
+export WOSP_MODE="dev"
 mise exec go@$GOLANG_VERSION -- go run ./main.go
 popd

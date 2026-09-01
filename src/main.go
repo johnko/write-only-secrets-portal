@@ -11,9 +11,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 )
-
-var MODE = "production" // production or test
 
 // ResponseData defines the structure of our JSON response
 type ResponseData struct {
@@ -28,6 +27,15 @@ type GetData struct {
 type UpdateData struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
+}
+
+func isProductionMode() bool {
+	var value, exists = os.LookupEnv("WOSP_MODE")
+	MODE := "production" // production
+	if exists {
+		MODE = value
+	}
+	return MODE == "production"
 }
 
 func notAcceptable(w http.ResponseWriter) {
@@ -45,7 +53,10 @@ func notAcceptable(w http.ResponseWriter) {
 }
 
 func recursiveCreateTestSecret(count int) string {
-	if MODE != "production" {
+	if isProductionMode() {
+		// dont allow test in production
+		return string('0')
+	} else {
 		ctx := context.TODO()
 
 		cfg, err := config.LoadDefaultConfig(ctx)
@@ -71,14 +82,13 @@ func recursiveCreateTestSecret(count int) string {
 			// log.Println(result)
 			return secretName
 		}
-	} else {
-		// dont allow test in production
-		return string('0')
 	}
 }
 
 func handleTestCreateSecret(w http.ResponseWriter, r *http.Request) {
-	if MODE != "production" {
+	if isProductionMode() {
+		notAcceptable(w)
+	} else {
 		// Strictly enforce the POST method
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -97,13 +107,13 @@ func handleTestCreateSecret(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(response)
-	} else {
-		notAcceptable(w)
 	}
 }
 
 func handleTestGetSecretValue(w http.ResponseWriter, r *http.Request) {
-	if MODE != "production" {
+	if isProductionMode() {
+		notAcceptable(w)
+	} else {
 		ctx := context.TODO()
 
 		// Strictly enforce the POST method
@@ -154,8 +164,6 @@ func handleTestGetSecretValue(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(response)
 		}
-	} else {
-		notAcceptable(w)
 	}
 }
 
