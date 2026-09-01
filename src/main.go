@@ -295,8 +295,8 @@ func main() {
 		http.Redirect(w, r, "/aws/", http.StatusFound)
 	})
 
-	log.Println("Server starting on :8888...")
-	if err := http.ListenAndServe(":8888", nil); err != nil {
+	log.Println("Server starting on 127.0.0.1::8888...")
+	if err := http.ListenAndServe("127.0.0.1::8888", nil); err != nil {
 		log.Fatal(err)
 	}
 }
