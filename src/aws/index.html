@@ -141,7 +141,6 @@
         </em>
       </h2>
       <div>
-        <button id="button_test_create" class="green">TEST: Create test secret</button>
       </div>
       <label for="input_filter_secrets">
         Search pattern (server-side):
@@ -181,9 +180,8 @@
           orderable: false,
           render: function (data, type, row) {
             const safename = data.Name.replace(/[^0-9a-zA-Z]/g, '_');
-            const test_button = '<button secretName="' + data.Name + '"  onclick="testGetSecretValueButton(event)" class="green">TEST: get secret</button>';
             const result = '<button form="form-' + safename + '" onclick="editOrCancelButton(event)">Edit</button><span id="form-' + safename + '" style="display:none;"><textarea rows=4 id="textarea-' + safename + '"></textarea><button secretName="' + data.Name + '" valueFrom="textarea-' + safename + '" form="form-' + safename + '" onclick="putSecretValueButton(event)" class="orange">Write secret value</button></span>';
-            return test_button + result;
+            return result;
           },
           width: '40em'
         }
@@ -302,7 +300,7 @@
 
       const xhr = new XMLHttpRequest();
       // Configure the request (Method, URL, Async)
-      xhr.open('PUT', '/api/aws/secretsmanager/putsecretvalue', true); // TODO putsecret value api instead of this test
+      xhr.open('PUT', '/api/aws/secretsmanager/putsecretvalue', true);
       xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       xhr.onload = function () {
         if (xhr.status >= 200 && xhr.status < 300) {
@@ -325,51 +323,6 @@
         form.style = 'display:none;';
         form.previousElementSibling.innerText = 'Edit';
       }
-    }
-  </script>
-  <script>
-    const apiTestAws = () => {
-      const xhr = new XMLHttpRequest();
-
-      // Configure the request (Method, URL, Async)
-      xhr.open('POST', '/test/aws/create', true);
-
-      xhr.onload = function () {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          confetti();
-        } else {
-          console.error('Request failed with status:', xhr.status);
-        }
-      };
-
-      xhr.send();
-    }
-
-    let button_test_create = document.getElementById('button_test_create');
-    button_test_create.onclick = () => {
-      apiTestAws();
-    };
-
-    const testGetSecretValueButton = (event) => {
-      var secretName = event.srcElement.getAttribute('secretName');
-      // console.log(secretName);
-
-      const xhr = new XMLHttpRequest();
-      // Configure the request (Method, URL, Async)
-      xhr.open('POST', '/test/aws/get', true);
-      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-      xhr.onload = function () {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          console.log(JSON.parse(xhr.responseText).SecretString);
-          confetti();
-        } else {
-          console.error('Request failed with status:', xhr.status);
-        }
-      };
-      const payload = {
-        name: secretName
-      };
-      xhr.send(JSON.stringify(payload));
     }
   </script>
   <script type="module">
