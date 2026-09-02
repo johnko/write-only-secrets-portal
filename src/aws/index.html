@@ -17,6 +17,7 @@
       }
 
       input,
+      select,
       textarea {
         border-color: rgb(170, 170, 170);
       }
@@ -34,6 +35,7 @@
       }
 
       input,
+      select,
       textarea {
         background-color: rgb(44, 48, 51);
         border-color: rgba(255, 255, 255, 0.2);
@@ -55,6 +57,7 @@
     }
 
     input,
+    select,
     textarea {
       border-radius: 3px;
       border-style: solid;
@@ -98,6 +101,11 @@
     input#input_filter_secrets {
       height: 2em;
       width: 30em;
+    }
+
+    select#select_limit_results {
+      height: 2em;
+      width: 4em;
     }
 
     div#div_secrets {
@@ -146,6 +154,10 @@
         Search pattern (server-side):
       </label>
       <input id="input_filter_secrets" />
+      <label for="select_limit_results">
+        Limit items:
+      </label>
+      <select id="select_limit_results"></select>
       <button id="button_refresh">Refresh</button>
       <span id="span_last_refreshed">
         List refreshed:
@@ -249,7 +261,7 @@
       ajax: {
         dataSrc: 'SecretList',
         // url: '/aws/example_aws_secretsmanager_list.json'
-        url: '/api/aws/secretsmanager/listsecrets'
+        url: '/api/aws/secretsmanager/listsecrets?max=20'
       },
       columnDefs,
       columns,
@@ -270,10 +282,26 @@
       table.ajax.reload();
     };
 
-    let input_filter_secrets = document.getElementById('input_filter_secrets');
-    input_filter_secrets.onkeyup = () => {
+    const updateTableUrl = () => {
+      console.log('updateTableUrl');
+      let input_filter_secrets = document.getElementById('input_filter_secrets');
+      let select_limit_results = document.getElementById('select_limit_results');
       input_filter_secrets.value = input_filter_secrets.value.trim();
-      table.ajax.url('/api/aws/secretsmanager/listsecrets?contains=' + input_filter_secrets.value.trim());
+      table.ajax.url('/api/aws/secretsmanager/listsecrets?contains=' + input_filter_secrets.value.trim() + '&max=' + select_limit_results.value);
+    }
+    let input_filter_secrets = document.getElementById('input_filter_secrets');
+    let select_limit_results = document.getElementById('select_limit_results');
+    input_filter_secrets.onkeyup = () => {
+      updateTableUrl();
+    }
+    select_limit_results.onchange = () => {
+      updateTableUrl();
+    }
+    for (var i = 1; i <= 5; i++) {
+      var maxOption = document.createElement('option');
+      maxOption.value = i * 20;
+      maxOption.innerText = i * 20;
+      select_limit_results.appendChild(maxOption);
     }
 
     const editOrCancelButton = (event) => {
