@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // ResponseData defines the structure of our JSON response
@@ -178,7 +179,15 @@ func handleListSecrets(w http.ResponseWriter, r *http.Request) {
 
 	// Read query parameters (e.g., /api?contains=Golang)
 	contains := r.URL.Query().Get("contains")
-	listSecretsInput := &secretsmanager.ListSecretsInput{}
+	max_str := r.URL.Query().Get("max")
+	max_parsed, err := strconv.ParseInt(max_str, 10, 32)
+	maxResults := int32(20)
+	if err == nil {
+		maxResults = int32(max_parsed)
+	}
+	listSecretsInput := &secretsmanager.ListSecretsInput{
+		MaxResults: &maxResults,
+	}
 	if contains != "" {
 		listSecretsInput = &secretsmanager.ListSecretsInput{
 			Filters: []types.Filter{
@@ -187,6 +196,7 @@ func handleListSecrets(w http.ResponseWriter, r *http.Request) {
 					Values: []string{contains},
 				},
 			},
+			MaxResults: &maxResults,
 		}
 	}
 
