@@ -192,7 +192,7 @@ func handleListSecrets(w http.ResponseWriter, r *http.Request) {
 		listSecretsInput = &secretsmanager.ListSecretsInput{
 			Filters: []types.Filter{
 				{
-					Key:    types.FilterNameStringTypeName,
+					Key:    types.FilterNameStringTypeAll,
 					Values: []string{contains},
 				},
 			},
