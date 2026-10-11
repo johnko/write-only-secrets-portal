@@ -4,7 +4,7 @@ set -exuo pipefail
 ## a script to start a simulation of AWS secretsmanager service
 
 # renovate: datasource=python-version depName=python packageName=python
-PYTHON_VERSION=3.14.7
+PYTHON_VERSION=3.14.8
 
 # renovate: datasource=pypi depName=pipx packageName=pipx
 PIPX_VERSION=1.17.6
