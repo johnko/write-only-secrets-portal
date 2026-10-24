@@ -4,7 +4,7 @@ set -exuo pipefail
 # open "http://localhost:8888/"
 
 # renovate: datasource=golang-version depName=golang packageName=golang
-GOLANG_VERSION=1.27.2
+GOLANG_VERSION=1.27.3
 
 WORKDIR=$(dirname "$0")
 pushd "$WORKDIR"
