@@ -9,7 +9,7 @@ license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
     "moto[secretsmanager]",
-    "moto[server] (==4.2.6)"
+    "moto[server] (==4.2.14)"
 ]
 
 
