@@ -10,7 +10,7 @@ PYTHON_VERSION=3.15.2
 PIPX_VERSION=1.18.16
 
 # renovate: datasource=pypi depName=poetry packageName=poetry
-POETRY_VERSION=2.5.1
+POETRY_VERSION=2.5.2
 
 WORKDIR=$(dirname "$0")
 pushd "$WORKDIR"
